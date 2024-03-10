@@ -1,0 +1,90 @@
+// Copyright 2020, Chen Shuaihao.
+//
+// Author: Chen Shuaihao
+//
+// -----------------------------------------------------------------------------
+// File: logtest.cpp
+// -----------------------------------------------------------------------------
+//
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <time.h>
+#include <sys/time.h>
+#include <stdint.h>
+#include "logger.h"
+
+int get_current_millis(void) {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (int)tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
+
+void log(int i, FILE *fp) {
+    char logline[LOGLINESIZE] = {0};
+    time_t t = time(nullptr);
+    struct tm *ptm = localtime(&t);
+
+    uint32_t n = snprintf(logline, LOGLINESIZE, "[%s][%04d-%02d-%02d %02d:%02d:%02d]%s:%d(%s): log test %d\n", "ERROR", ptm->tm_year+1900, 
+        ptm->tm_mon+1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec, __FILE__, __LINE__, __FUNCTION__, i);
+
+    uint32_t wt_len = fwrite(logline, 1, n, fp);
+    if(wt_len != n) {
+        std::cerr << "fwrite fail!" << std::endl;
+    }   
+    fflush(fp);
+}
+
+//同步写入测试
+void synctest() {
+    printf("1 million times logtest synctest...\n");
+    char logfilepath[256] = "./log_synctest";
+    FILE *fp = fopen(logfilepath, "w+");
+    if(fp == nullptr) {
+        printf("logfile open fail!\n");
+    }
+    uint64_t start_ts = get_current_millis();
+    for (int i = 0;i < 1000000; ++i)
+    {
+        //LOG(LoggerLevel::ERROR, "log test %d\n", i);
+        log(i, fp);
+    }
+    uint64_t end_ts = get_current_millis();
+    fclose(fp);
+    printf("1 million times logtest, time use %lums, %ldw logs/second\n", end_ts - start_ts, 100*1000/(end_ts - start_ts));
+}
+
+//单线程异步写入测试
+static int logs = 100 * 100;
+void single_thread_test() {    
+    printf("single_thread_test...\n");
+    uint64_t start_ts = get_current_millis();
+    for (int i = 0;i < logs; ++i)
+    {
+        LOG(LogLevel::ERROR, "log test %d\n", i);
+    }
+    uint64_t end_ts = get_current_millis();
+    printf("1 million times logtest, time use %lums, %ldw logs/second\n", end_ts - start_ts, logs/(end_ts - start_ts)/10);
+}
+
+static int threadnum = 4;
+void func() {
+    for (int i = 0;i < logs; ++i)
+    {
+        LOG(LogLevel::ERROR, "log test %d\n", i);
+    }    
+}
+
+int main(int argc, char** argv)
+{
+    //synctest
+    synctest();
+
+    //my test
+    LOG_INIT(".", LogLevel::INFO);
+    //single thread test
+    single_thread_test();
+
+
+}
