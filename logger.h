@@ -1,8 +1,6 @@
 #ifndef LOGGER_HEADER_
 #define LOGGER_HEADER_
 
-#include <string.h>
-#include <stdarg.h>
 #include <string>
 #include <ctime>
 #include <cstdio>
@@ -10,13 +8,12 @@
 #include <iostream>
 #include <cstdint>
 #include <thread>
+#include <stdarg.h>
+
 #include "utility.h"
 
-#define BUFSIZE 32
+#define BUFSIZE 1024
 #define LOGLINESIZE 1024
-
-// using namespace std;
-
 
 
 class Logger;
@@ -32,7 +29,6 @@ class Logger;
             Logger::GetInstance()->Write(level, __FILE__, __LINE__, __FUNCTION__, fmt, __VA_ARGS__);  \
         }  \
     } while (0)  
-
 
 
 enum LogLevel {
@@ -58,19 +54,18 @@ class Logger {
     }
 
   public:
-    RingBuffer<std::string> logger_buffer;
 
   private:
     Logger();
     ~Logger();
 
   private:
-    FILE *log_fp;
-    char save_ymdhms[64];
+    FILE *log_fp_;
+    char save_ymdhms_[64];
     int log_level_;
-    std::thread flushthread;
+    std::thread flushthread_;
+    RingBuffer<std::string, BUFSIZE> logger_buffer_;
 
-    // (BUFSIZE); 
 
 };
 

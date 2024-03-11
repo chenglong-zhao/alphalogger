@@ -2,21 +2,18 @@
 #define Utility_HEADER_
 
 
-template <class T>
+template <class T, size_t S>
 class RingBuffer {
   public:
     RingBuffer()
-      : size_(128),
+      : size_(S),
         front_(0),
-        rear_(0){
+        rear_(0) {
+      data_ = new T[size_];
     }
 
     ~RingBuffer(){
         delete [] data_;
-    }
-
-    void Init(){
-      data_ = new T[size_];
     }
    
     void Push(T elemt){
@@ -43,7 +40,6 @@ class RingBuffer {
     int rear_;
     unsigned int size_;
     T* data_;
-    std:: thread flushthread;
 };
 
 #endif 

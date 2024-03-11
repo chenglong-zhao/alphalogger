@@ -56,7 +56,7 @@ void synctest() {
 }
 
 //单线程异步写入测试
-static int logs = 100 * 100;
+static int logs = 1000000;
 void single_thread_test() {    
     printf("single_thread_test...\n");
     uint64_t start_ts = get_current_millis();
@@ -65,25 +65,14 @@ void single_thread_test() {
         LOG(LogLevel::ERROR, "log test %d\n", i);
     }
     uint64_t end_ts = get_current_millis();
-    printf("1 million times logtest, time use %lums, %ldw logs/second\n", end_ts - start_ts, logs/(end_ts - start_ts)/10);
+    printf("1 million times logtest, time use %lums \n", end_ts - start_ts);
 }
 
-static int threadnum = 4;
-void func() {
-    for (int i = 0;i < logs; ++i)
-    {
-        LOG(LogLevel::ERROR, "log test %d\n", i);
-    }    
-}
+
 
 int main(int argc, char** argv)
 {
-    //synctest
-    synctest();
-
-    //my test
     LOG_INIT(".", LogLevel::INFO);
-    //single thread test
     single_thread_test();
 
 
